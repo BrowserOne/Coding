@@ -1,50 +1,60 @@
-from methods import pendulum as pd
+from Setup import pendulum as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-ob1 = pd(1, 10.0,theta_initial=90, setstep = 'Euler cromer')
-ob2 = pd(0.5, 5.0,theta_initial=10, setstep = 'Euler cromer')
-t_max = 100   #[s]
-dt = 1/100    #[s]
-L = ob1._L + ob2._L
+ob = pd(np.array([1,0.5]), np.array([10.0,5.0]),theta = np.array([90,90]), omega = np.array([0.0,0.0]), setstep = 'Runge-KuttaDouble')
+t_max = 10  #[s]
+dt = 1/500    #[s]
+L = ob._L[0] + ob._L[1]
 
+# fig, (ax1, ax2) = plt.subplots(1, 2)
+ke = []
+pe = []
+e = []
 #set up loop
-while ob1._t<t_max:
-    a1 = ((-ob1._g*(ob1._M+ob2._M)*np.sin(ob1._theta) - ob2._M*ob1._g*np.sin(ob1._theta - 2*ob2._theta) -
-                                 2*np.sin(ob1._theta - ob2._theta)*ob2._M*((ob2._omega**2)*ob2._L + (ob1._omega**2)*ob1._L*np.cos(ob1._theta - ob2._theta)))/
-                                 (ob1._L*(2*ob1._M + ob2._M - ob2._M*np.cos(2*ob1._theta - 2*ob2._theta))))
-    a2 = ((2*np.sin(ob1._theta - ob2._theta)*((ob1._omega**2)*ob1._L*(ob1._M + ob2._M)+ ob1._g*(ob1._M + ob2._M)*np.cos(ob1._theta) + 
-                                                                    (ob2._omega**2)*ob2._L*ob2._M*np.cos(ob1._theta - ob2._theta)))/
-                                                                    (ob2._L*(2*ob1._M + ob2._M - ob2._M*np.cos(2*ob1._theta - 2*ob2._theta))))
+while ob._t<t_max:
     
     #increment velcoity account for angle being 0.0
-    ob1.step(a1, dt)
-    ob2.step(a2, dt)
-    x2 = ob1.x() + ob2.x()
-    y2 = ob1.y() + ob2.y()
+    ob.step(dt)
+    x2 = ob.x()[0] + ob.x()[1]
+    y2 = ob.y()[0] + ob.y()[1]
 
+    #calculate energy and momenutm for position
+    # KE = (1/2)*(ob._M[0])*(ob._L[0]*ob._omega[0])**2 + (1/2)*(ob._M[1])*((ob._L[0]*ob._omega[0])**2 +
+    #                                                                       (ob._L[1]*ob._omega[1])**2 +
+    #                                                                         (2*ob._L[0]*ob._L[1]*ob._omega[0]*ob._omega[1]*np.cos(ob._theta[0] - ob._theta[1])))  #Kinetic energy
+    KE = (1/2)*(ob._M[0])*(ob._L[0]*ob._omega[0])**2 + (1/2)*(ob._M[1])*(abs((ob._L[0]*ob._omega[0]))+abs((ob._L[1]*ob._omega[1])))**2
+    PE = ob._M[0]*ob._g*(ob.y()[0]+ob._L[0]) + ob._M[1]*ob._g*(y2+L)                                #Potential energy
+    E = KE + PE                                                                                     #total energy
+    ke.append(KE)
+    pe.append(PE)
+    e .append( E)
+    # plt.cla()
+    # ax2.cla()
+    # plt.plot(ob.x()[0],ob.y()[0], 'bo')
+    # plt.plot([0,ob.x()[0]], [0,ob.y()[0]], '-b')
+    # plt.plot(x2,y2,'ro')
+    # plt.plot([ob.x()[0],x2],[ob.y()[0],y2], '-r')
+    # plt.xlim([(-L)-L/5, (L)+L/5])  
+    # plt.ylim([(-L)-L/5, (L)+L/5])
+    # plt.xlabel('x [m]')
+    # plt.ylabel('y [m]')
+    # plt.title("t={:0.1f}".format(ob._t))
+    # ax2.plot(0, KE, 'ro')
+    # ax2.plot(0, PE, 'bo')
+    # ax2.plot(0, E , 'go')
+    # ax2.set_xlim(-1,1)
+    # ax2.set_ylim(-10,250)
+    # plt.pause(0.0001)
 
-    plt.cla()
-    plt.plot(ob1.x(),ob1.y(), 'bo')
-    plt.plot([0,ob1.x()], [0,ob1.y()], '-b')
-    plt.plot(x2,y2,'ro')
-    plt.plot([ob1.x(),x2],[ob1.y(),y2], '-r')
-    plt.xlim([(-L)-L/5, (L)+L/5])  
-    plt.ylim([(-L)-L/5, (L)+L/5])
-    plt.xlabel('x [m]')
-    plt.ylabel('y [m]')
-    plt.title("t={:0.1f}".format(ob1._t))
-    plt.pause(0.0001)
-
-
-
+plt.plot(ke, label = 'KE')
+plt.plot(pe, label = 'PE')
+plt.plot(e , label = 'E')
+plt.legend()
 plt.show()
 
 # #Damping parameter 
 # R = 1.0
-
-# #spring constant
-# K = 1.0
 
 # #driving amplitude
 # A = 1.0

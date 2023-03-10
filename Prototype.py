@@ -1,4 +1,4 @@
-from methods import pendulum as pd
+from Setup import pendulum as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
