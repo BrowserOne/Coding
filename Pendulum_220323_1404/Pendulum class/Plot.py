@@ -40,4 +40,4 @@ while i<= position[-1]:
     #increment by time step
     i += position[-3]
 
-plt.show()
+# plt.show()
